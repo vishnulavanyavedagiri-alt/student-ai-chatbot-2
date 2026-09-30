@@ -1,0 +1,360 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+    <title>Ava - AI Student Assistant</title>
+
+    <style>
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+            font-family: Arial, sans-serif;
+        }
+
+        body {
+            min-height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            background: linear-gradient(135deg, #dbeafe, #fce7f3);
+        }
+
+        .chat-container {
+            width: 420px;
+            height: 650px;
+            background: white;
+            border-radius: 25px;
+            overflow: hidden;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.2);
+
+            display: flex;
+            flex-direction: column;
+        }
+
+        .header {
+            padding: 18px;
+            text-align: center;
+            color: white;
+            background: linear-gradient(135deg, #6366f1, #ec4899);
+        }
+
+        .header h2 {
+            margin-bottom: 6px;
+        }
+
+        .status {
+            font-size: 13px;
+        }
+
+        .avatar-area {
+            text-align: center;
+            padding: 15px;
+            background: #f8fafc;
+        }
+
+        .avatar {
+            width: 110px;
+            height: 110px;
+            margin: auto;
+
+            display: flex;
+            justify-content: center;
+            align-items: center;
+
+            border-radius: 50%;
+            background: linear-gradient(135deg, #fbcfe8, #ddd6fe);
+
+            font-size: 65px;
+
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.15);
+        }
+
+        .speaking {
+            animation: pulse 1s infinite;
+        }
+
+        @keyframes pulse {
+            0% {
+                transform: scale(1);
+            }
+
+            50% {
+                transform: scale(1.08);
+            }
+
+            100% {
+                transform: scale(1);
+            }
+        }
+
+        .avatar-name {
+            margin-top: 8px;
+            font-weight: bold;
+            color: #4f46e5;
+        }
+
+        .messages {
+            flex: 1;
+            padding: 15px;
+            overflow-y: auto;
+        }
+
+        .message {
+            max-width: 80%;
+            padding: 10px 14px;
+            margin-bottom: 10px;
+            border-radius: 15px;
+            line-height: 1.4;
+        }
+
+        .bot {
+            background: #eef2ff;
+            color: #312e81;
+        }
+
+        .user {
+            margin-left: auto;
+            background: #6366f1;
+            color: white;
+        }
+
+        .input-area {
+            display: flex;
+            gap: 8px;
+            padding: 12px;
+            border-top: 1px solid #ddd;
+        }
+
+        #userInput {
+            flex: 1;
+            padding: 12px;
+
+            border: 1px solid #ccc;
+            border-radius: 20px;
+            outline: none;
+        }
+
+        button {
+            width: 45px;
+            height: 45px;
+
+            border: none;
+            border-radius: 50%;
+
+            cursor: pointer;
+            font-size: 18px;
+        }
+
+        #voiceButton {
+            background: #ec4899;
+            color: white;
+        }
+
+        #sendButton {
+            background: #6366f1;
+            color: white;
+        }
+
+        button:hover {
+            transform: scale(1.05);
+        }
+    </style>
+</head>
+
+<body>
+
+    <div class="chat-container">
+
+        <div class="header">
+            <h2>🎓 AI Student Assistant</h2>
+            <div class="status">
+                Online • Ready to help students
+            </div>
+        </div>
+
+        <div class="avatar-area">
+
+            <div id="avatar" class="avatar">
+                👩🏻‍💻
+            </div>
+
+            <div class="avatar-name">
+                Ava - AI Student Assistant
+            </div>
+
+        </div>
+
+        <div id="messages" class="messages">
+
+            <div class="message bot">
+                Hello! 👋 I am Ava, your AI Student Assistant.
+                <br><br>
+                Ask me anything about your studies, exams,
+                assignments, colleges, placements and more.
+            </div>
+
+        </div>
+
+        <div class="input-area">
+
+            <input
+                type="text"
+                id="userInput"
+                placeholder="Ask your question..."
+            >
+
+            <button id="voiceButton" onclick="startVoice()">
+                🎤
+            </button>
+
+            <button id="sendButton" onclick="sendMessage()">
+                ➤
+            </button>
+
+        </div>
+
+    </div>
+
+    <script>
+
+        const input = document.getElementById("userInput");
+        const messages = document.getElementById("messages");
+        const avatar = document.getElementById("avatar");
+
+
+        function addMessage(text, sender) {
+
+            const message = document.createElement("div");
+
+            message.classList.add("message");
+            message.classList.add(sender);
+
+            message.textContent = text;
+
+            messages.appendChild(message);
+
+            messages.scrollTop = messages.scrollHeight;
+        }
+
+
+        async function sendMessage() {
+
+    const userText = input.value.trim();
+
+    if (userText === "") {
+        return;
+    }
+
+    addMessage(userText, "user");
+
+    input.value = "";
+
+    addMessage("Ava is thinking... 🤔", "bot");
+
+    try {
+
+        const response = await fetch(
+            "http://localhost:3000/api/chat",
+            {
+                method: "POST",
+
+                headers: {
+                    "Content-Type": "application/json"
+                },
+
+                body: JSON.stringify({
+                    question: userText
+                })
+            }
+        );
+
+        const data = await response.json();
+
+        const botMessages =
+            document.querySelectorAll(".bot");
+
+        const lastBotMessage =
+            botMessages[botMessages.length - 1];
+
+        lastBotMessage.textContent = data.answer;
+
+    } catch (error) {
+
+        console.error(error);
+
+        const botMessages =
+            document.querySelectorAll(".bot");
+
+        const lastBotMessage =
+            botMessages[botMessages.length - 1];
+
+        lastBotMessage.textContent =
+            "Sorry 😊 I could not connect to Ava's AI brain.";
+
+    }
+
+}
+
+
+        input.addEventListener("keydown", function(event) {
+
+            if (event.key === "Enter") {
+                sendMessage();
+            }
+
+        });
+
+
+        function startVoice() {
+
+            const SpeechRecognition =
+                window.SpeechRecognition ||
+                window.webkitSpeechRecognition;
+
+            if (!SpeechRecognition) {
+
+                alert(
+                    "Voice input is not supported in this browser. Please use Google Chrome."
+                );
+
+                return;
+            }
+
+            const recognition = new SpeechRecognition();
+
+            recognition.lang = "en-IN";
+
+            recognition.start();
+
+            input.placeholder = "Listening... 🎤";
+
+            recognition.onresult = function(event) {
+
+                const transcript =
+                    event.results[0][0].transcript;
+
+                input.value = transcript;
+
+                input.placeholder =
+                    "Ask your question...";
+
+                sendMessage();
+
+            };
+
+            recognition.onerror = function() {
+
+                input.placeholder =
+                    "Ask your question...";
+
+            };
+
+        }
+
+    </script>
+
+</body>
+</html>
